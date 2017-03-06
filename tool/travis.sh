@@ -95,6 +95,5 @@ if [ "$BRANCH" != "master" ]; then
     cd ../
     echo "Deploying to $PROJECT_NAME"
     npm install --global firebase-tools@3.0.0
-    echo "firebase -P "$PROJECT_NAME" --token "$FIREBASE_TOKEN" deploy"
-    firebase -P "$PROJECT_NAME" --token "$FIREBASE_TOKEN" deploy
+    firebase -P "$PROJECT_NAME" --token "$FIREBASE_TOKEN_DEV" deploy
 fi
