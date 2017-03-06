@@ -85,6 +85,6 @@ Future<IssueComment> postLinkToGithub(String projectToDeploy, PullRequest reques
   IssueComment issueComment = await github.issues.createComment(
       new RepositorySlug.full("flutter/website"),
       request.number,
-      "Staging URL Generated At ${projectToDeploy}. Please allow Travis Build to finish to view the URL.");
+      "Staging URL Generated At https://${projectToDeploy}.firebaseapp.com . Please allow Travis Build to finish to view the URL.");
   return issueComment;
 }
