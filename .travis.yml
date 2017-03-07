@@ -6,3 +6,6 @@ before_install:
   - rvm install 2.2.2
   - ./tool/before_install.sh
 script: ./tool/travis.sh
+notifications:
+  email:
+    - flutter-team+travis@google.com
