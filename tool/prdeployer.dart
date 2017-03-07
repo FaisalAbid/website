@@ -5,32 +5,28 @@ import 'dart:io';
 
 GitHub github;
 String firebaseAuth;
-PullRequest currentPullrequest;
+PullRequest currentPullRequest;
 
 String firebaseRoot = "https://flutter-web-controller.firebaseio.com/flutter/pulls";
 
 main(List<String> arguments) async {
-  String branchName = arguments[0];
-  Map env = Platform.environment;
+  Map<String, String> env = Platform.environment;
   github = createGitHubClient(auth: new Authentication.withToken(env["GITHUB_TOKEN"]));
+  
   firebaseAuth = arguments[1];
+  String branchName = arguments[0];
 
   FirebaseClient fbClient = new FirebaseClient(firebaseAuth);
 
-  List prsList = await getPullRequests();
-  for (PullRequest p in prsList) {
-    if (branchName == p.head.ref) {
-      currentPullrequest = p;
-      break;
-    }
-  }
+  List<PullRequest> prsList = await getPullRequests();
+  currentPullRequest = prsList.firstWhere((p) => p.head.ref == branchName);
 
   String rootPath = "${firebaseRoot}.json";
 
-  Map projectsData = await fbClient.get(rootPath);
+  Map<String, Map<String, String>> projectsData = await fbClient.get(rootPath);
   String projectToDeploy;
 
-  await projectsData.forEach((String key, Map value) async {
+  await projectsData.forEach((String key, Map<String, String> value) async {
     if (value["branch"] == branchName) {
       // this has already been deployed.
       // deploy again
@@ -44,7 +40,7 @@ main(List<String> arguments) async {
   });
 
   if (projectToDeploy == null) {
-    await projectsData.forEach((String key, Map value) async {
+    await projectsData.forEach((String key, Map<String, String> value) async {
       if (projectToDeploy != null) {
         // project already set
         // todo: remove this foreach with a better iterator pattern
@@ -52,7 +48,7 @@ main(List<String> arguments) async {
       }
       projectToDeploy = value["name"];
       await fbClient.patch("${firebaseRoot}/$key.json", {"branch": branchName});
-      await postLinkToGithub(projectToDeploy, currentPullrequest);
+      await postLinkToGithub(projectToDeploy, currentPullRequest);
     });
   }
 
@@ -60,25 +56,20 @@ main(List<String> arguments) async {
 }
 
 Future<bool> isBranchOld(String branchName) async {
-  List prsList = await getPullRequests();
-  for (PullRequest p in prsList) {
-    if (branchName == p.head.ref) {
-      return false;
-    }
-  }
-  return true;
+  List<PullRequest> prsList = await getPullRequests();
+  return !prsList.any((p) => p.head.ref == branchName);
 }
 
-Future<List> getPullRequests() async {
+Future<List<PullRequest>> getPullRequests() async {
   Stream<PullRequest> prs = await github.pullRequests.list(new RepositorySlug.full("flutter/website"));
-  List prsList = await prs.toList();
-  return prsList;
+  return await prs.toList();
 }
 
 Future<IssueComment> postLinkToGithub(String projectToDeploy, PullRequest request) async {
   if (request == null) {
     return null;
   }
+
   IssueComment issueComment = await github.issues.createComment(
       new RepositorySlug.full("flutter/website"),
       request.number,
