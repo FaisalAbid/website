@@ -78,15 +78,13 @@ bundle exec htmlproofer _site --empty-alt-ignore --url-ignore "#" --only-4xx --u
 
 if [ "$TRAVIS_EVENT_TYPE" = "push" ] && [ "$TRAVIS_BRANCH" = "master" ]; then
   # Deploy pushes to master to Firebase hosting.
-  # TODO: deploy to a personal staging site, based on github ID, when not
-  #       merging into master
   echo "Deploying to Firebase."
   npm install --global firebase-tools@3.0.0
   firebase -P sweltering-fire-2088 --token "$FIREBASE_TOKEN" deploy
 fi
 
 if [ "$BRANCH" != "master" ]; then
-    echo "deploying to test environment"
+    echo "deploying to stage environment"
     echo $FIREBASE_FILE >> ./service_account.json
     export FIREBASE_AUTH=`oauth2l fetch --json ./service_account.json firebase.database userinfo.email 2>&1`
     cd tool/
